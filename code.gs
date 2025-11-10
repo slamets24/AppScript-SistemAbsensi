@@ -86,7 +86,10 @@ function saveAttendance(employeeName, year, month, day, type, value) {
   if (type === 'status') {
     sheet.getRange(rowIndex, 3).setValue(value || '');
   } else if (type === 'overtime') {
-    sheet.getRange(rowIndex, 4).setValue(parseFloat(value) || 0);
+    // Fix: Ganti koma dengan titik untuk format angka yang benar
+    const cleanValue = String(value).replace(',', '.');
+    const numValue = parseFloat(cleanValue) || 0;
+    sheet.getRange(rowIndex, 4).setNumberFormat('0.0').setValue(numValue);
   }
   
   return { success: true };

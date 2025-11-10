@@ -404,6 +404,43 @@
             border-color: #66BB6A;
         }
 
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px;
+            margin-top: 5px;
+        }
+
+        .preset-btn {
+            padding: 6px 4px;
+            background: #e3f2fd;
+            border: 1px solid #2196F3;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            color: #1976D2;
+        }
+
+        .preset-btn:hover {
+            background: #2196F3;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .preset-btn:active {
+            transform: scale(0.95);
+        }
+
+        .hint-text {
+            font-size: 10px;
+            color: #999;
+            text-align: center;
+            margin-top: 3px;
+            font-style: italic;
+        }
+
         .loading,
         .empty-state {
             text-align: center;
@@ -448,6 +485,18 @@
 
         <!-- Toast Notification -->
         <div id="toast" class="toast"></div>
+
+        <!-- Panduan Singkat -->
+        <div
+            style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
+            <h3 style="margin-bottom: 10px; font-size: 16px; color: #856404;">📋 Cara Menggunakan (3 Langkah Mudah)</h3>
+            <ol style="margin: 0; padding-left: 20px; color: #856404; font-size: 14px; line-height: 1.8;">
+                <li><strong>Pilih nama karyawan</strong>, bulan, dan tahun</li>
+                <li><strong>Klik tombol "Muat Data Absensi"</strong></li>
+                <li><strong>Isi kehadiran</strong> dengan klik tombol ✓ (Hadir) atau ✗ (Tidak Hadir) di setiap tanggal
+                </li>
+            </ol>
+        </div>
 
         <div class="controls">
             <div class="form-group">
@@ -533,58 +582,53 @@
             </div>
 
             <div class="legend">
-                <h3>📖 Penjelasan Kartu</h3>
+                <h3>📖 Penjelasan Kartu (Bahasa Sederhana)</h3>
 
                 <div class="legend-item">
                     <div class="legend-icon">📆</div>
                     <div class="legend-text">
-                        <strong>Hari Kerja Berlalu:</strong> Total hari kerja yang sudah lewat (tidak termasuk Minggu).
-                        Contoh: Jika sudah 6 hari kerja berlalu, artinya Anda sudah melalui 6 hari kerja sejak tanggal
-                        2.
+                        <strong>Hari Kerja Berlalu:</strong> Berapa hari kerja yang sudah lewat (Senin-Sabtu saja, tidak
+                        termasuk Minggu).
                     </div>
                 </div>
 
                 <div class="legend-item">
                     <div class="legend-icon">✅</div>
                     <div class="legend-text">
-                        <strong>Hari Kerja Bersih:</strong> Jumlah hari kerja penuh (8.5 jam) yang berhasil terbentuk
-                        dari akumulasi jam kerja + lembur. Contoh: 39.5 jam = 4 hari bersih + 5.5 jam sisa.
+                        <strong>Hari Kerja Bersih:</strong> Berapa hari kerja yang sudah terpenuhi penuh. Jika kurang
+                        dari target, lembur bisa menutup kekurangan.
                     </div>
                 </div>
 
                 <div class="legend-item">
                     <div class="legend-icon">⏰</div>
                     <div class="legend-text">
-                        <strong>Sisa Jam:</strong> Hanya tampil jika BELUM TERPENUHI. Jam yang tersisa setelah
-                        pembentukan hari kerja penuh, tapi belum cukup membentuk 1 hari kerja lagi (butuh 8.5 jam). Jika
-                        sudah terpenuhi, kartu ini disembunyikan.
+                        <strong>Sisa Jam:</strong> Berapa jam lagi yang dibutuhkan untuk melengkapi 1 hari kerja penuh.
+                        Kartu ini muncul jika masih ada kekurangan.
                     </div>
                 </div>
 
                 <div class="legend-item">
                     <div class="legend-icon">⚠️</div>
                     <div class="legend-text">
-                        <strong>Kekurangan:</strong> Dihitung REAL dari kalender. Setiap hari yang tidak masuk penuh
-                        (kurang dari target) akan dihitung kekurangannya. Contoh: Hari Senin target 8 jam tapi cuma 4
-                        jam = kurang 4 jam.
+                        <strong>Kekurangan:</strong> Total hari dan jam yang masih kurang dari target. Contoh: "1 hari +
+                        2.5 jam" artinya kurang 1 hari penuh dan 2.5 jam lagi.
                     </div>
                 </div>
 
                 <div class="legend-item">
                     <div class="legend-icon">🎁</div>
                     <div class="legend-text">
-                        <strong>Lembur Bersih:</strong> Hanya tampil jika SUDAH TERPENUHI. Jam lembur yang benar-benar
-                        menjadi bonus setelah semua hari kerja terpenuhi. Jika masih ada kekurangan, kartu ini
-                        disembunyikan dan yang tampil adalah Sisa Jam.
+                        <strong>Lembur Bersih:</strong> Jam lembur yang jadi bonus setelah semua target terpenuhi. Kartu
+                        ini muncul jika tidak ada kekurangan lagi.
                     </div>
                 </div>
 
                 <div class="legend-item">
                     <div class="legend-icon">❌</div>
                     <div class="legend-text">
-                        <strong>Tidak Hadir:</strong> Dihitung REAL dari kalender. Jumlah hari kerja (sampai hari ini)
-                        di mana tidak ada jam kerja sama sekali atau ditandai "Tidak Hadir". Hari yang belum tiba tidak
-                        dihitung.
+                        <strong>Tidak Hadir:</strong> Jumlah hari yang benar-benar tidak masuk (ditandai ✗). Masuk
+                        setengah hari tidak dihitung tidak hadir.
                     </div>
                 </div>
             </div>
@@ -747,13 +791,21 @@
             <div class="input-label">Jam Kerja</div>
             ${status !== 'HADIR' && status !== 'TIDAK_HADIR' ?
                             `<input type="number" step="0.5" min="0" max="12" class="input-small hours-input" 
-                value="${status || ''}" placeholder="0" onchange="setPartialHours(${currentDate.getDate()}, this.value)">` :
-                            '<div style="text-align: center; font-size: 11px; color: #4CAF50; padding: 8px;">Auto</div>'
+                value="${status || ''}" placeholder="0" onchange="setPartialHours(${currentDate.getDate()}, this.value)" title="Isi jika masuk setengah hari (contoh: 4 untuk 4 jam)">
+                <div class="hint-text">Kosongkan jika hadir penuh</div>` :
+                            '<div style="text-align: center; font-size: 11px; color: #4CAF50; padding: 8px;">Hadir Penuh</div>'
                         }
           ` : '<div style="text-align: center; font-size: 11px; color: #F44336; padding: 8px;">Libur</div>'}
-          <div class="input-label">Lembur</div>
+          <div class="input-label">Lembur (Jam)</div>
+          <div class="preset-buttons">
+            <button class="preset-btn" onclick="setOvertimePreset(${currentDate.getDate()}, 0.5)">0.5</button>
+            <button class="preset-btn" onclick="setOvertimePreset(${currentDate.getDate()}, 1)">1</button>
+            <button class="preset-btn" onclick="setOvertimePreset(${currentDate.getDate()}, 1.5)">1.5</button>
+            <button class="preset-btn" onclick="setOvertimePreset(${currentDate.getDate()}, 2)">2</button>
+          </div>
           <input type="number" step="0.5" min="0" class="input-small overtime-input" placeholder="0"
-            value="${overtime || ''}" onchange="setOvertime(${currentDate.getDate()}, this.value)">
+            value="${overtime || ''}" onchange="setOvertime(${currentDate.getDate()}, this.value)" id="overtime-${currentDate.getDate()}">
+          <div class="hint-text">Klik tombol atau ketik manual</div>
         `;
 
                 grid.appendChild(cell);
@@ -780,11 +832,24 @@
         }
 
         function setPartialHours(day, value) {
-            saveData(day, 'status', value || '');
+            // Ganti koma dengan titik untuk format angka
+            const cleanValue = value ? String(value).replace(',', '.') : '';
+            saveData(day, 'status', cleanValue);
         }
 
         function setOvertime(day, value) {
-            saveData(day, 'overtime', parseFloat(value) || 0);
+            // Ganti koma dengan titik untuk format angka
+            const cleanValue = String(value).replace(',', '.');
+            saveData(day, 'overtime', parseFloat(cleanValue) || 0);
+        }
+
+        function setOvertimePreset(day, value) {
+            // Update input field
+            const input = document.getElementById('overtime-' + day);
+            if (input) {
+                input.value = value;
+            }
+            saveData(day, 'overtime', value);
         }
 
         function saveData(day, type, value) {
