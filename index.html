@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Absensi & Jam Kerja</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: clamp(20px, 4vw, 28px);
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: clamp(12px, 3vw, 14px);
+            opacity: 0.9;
+        }
+
+        .alert {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid;
+        }
+
+        .alert-error {
+            background: #fdecea;
+            border-color: #d93025;
+            color: #d93025;
+        }
+
+        .alert-success {
+            background: #e6f4ea;
+            border-color: #0f9d58;
+            color: #0f9d58;
+        }
+
+        /* Toast Notification Slide-in dari Kanan */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: -400px;
+            min-width: 300px;
+            max-width: 400px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: right 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .toast.show {
+            right: 20px;
+        }
+
+        .toast-success {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+        }
+
+        .toast-error {
+            background: linear-gradient(135deg, #F44336 0%, #d32f2f 100%);
+            color: white;
+        }
+
+        .toast-icon {
+            font-size: 24px;
+            animation: bounceIn 0.6s;
+        }
+
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0.3);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        select,
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+
+        select:focus,
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: transform 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .period-info {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+            color: #667eea;
+            border: 2px solid #667eea30;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-card h3 {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .value {
+            font-size: clamp(24px, 5vw, 32px);
+            font-weight: bold;
+            margin-bottom: 5px;
+            line-height: 1.2;
+        }
+
+        .stat-card.clean .value {
+            font-size: clamp(18px, 4vw, 24px);
+        }
+
+        .stat-card .label {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .stat-card.elapsed .value {
+            color: #2196F3;
+        }
+
+        .stat-card.clean .value {
+            color: #4CAF50;
+        }
+
+        .stat-card.remaining .value {
+            color: #FF9800;
+        }
+
+        .stat-card.shortfall .value {
+            color: #F44336;
+        }
+
+        .stat-card.overtime .value {
+            color: #9C27B0;
+        }
+
+        .stat-card.absent .value {
+            color: #607D8B;
+        }
+
+        .legend {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .legend h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 12px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .legend-icon {
+            font-size: 20px;
+            min-width: 24px;
+        }
+
+        .legend-text {
+            font-size: 13px;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        .calendar {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .calendar h2 {
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+            font-size: clamp(16px, 4vw, 20px);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
+        .day-cell {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 12px;
+            min-height: 150px;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .day-cell:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .day-cell.sunday {
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+        }
+
+        .day-cell.saturday {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        }
+
+        .day-number {
+            font-weight: bold;
+            font-size: 16px;
+            text-align: center;
+            padding: 8px;
+            background: #667eea;
+            color: white;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .day-name {
+            font-size: 11px;
+            color: #666;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .attendance-btn {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+
+        .attendance-btn:active {
+            transform: scale(0.95);
+        }
+
+        .attendance-btn.hadir {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .attendance-btn.tidak-hadir {
+            background: #F44336;
+            color: white;
+        }
+
+        .attendance-btn.none {
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .input-small {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 13px;
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        .input-label {
+            font-size: 10px;
+            color: #999;
+            text-align: center;
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .overtime-input {
+            background: #FFF9C4;
+            border-color: #FDD835;
+        }
+
+        .hours-input {
+            background: #E8F5E9;
+            border-color: #66BB6A;
+        }
+
+        .loading,
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .loading h3,
+        .empty-state h2 {
+            font-size: clamp(24px, 6vw, 36px);
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .calendar-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .day-cell {
+                min-height: 140px;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Sistem Absensi Karyawan</h1>
+            <p>Lembur diakumulasi ke jam kerja normal sampai terpenuhi</p>
+        </div>
+
+        <div id="errorAlert" class="alert alert-error" style="display: none;"></div>
+        <div id="successAlert" class="alert alert-success" style="display: none;"></div>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="toast"></div>
+
+        <div class="controls">
+            <div class="form-group">
+                <label for="employeeSelect">👤 Pilih Karyawan</label>
+                <select id="employeeSelect">
+                    <option value="">-- Pilih Karyawan --</option>
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label for="monthSelect">📅 Bulan</label>
+                    <select id="monthSelect">
+                        <option value="1">Januari</option>
+                        <option value="2">Februari</option>
+                        <option value="3">Maret</option>
+                        <option value="4">April</option>
+                        <option value="5">Mei</option>
+                        <option value="6">Juni</option>
+                        <option value="7">Juli</option>
+                        <option value="8">Agustus</option>
+                        <option value="9">September</option>
+                        <option value="10">Oktober</option>
+                        <option value="11">November</option>
+                        <option value="12">Desember</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="yearSelect">📆 Tahun</label>
+                    <select id="yearSelect">
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="loadEmployee()">
+                🚀 Muat Data Absensi
+            </button>
+        </div>
+
+        <div id="statsContainer" style="display: none;">
+            <div class="period-info" id="periodInfo">Loading...</div>
+
+            <div class="stats-grid">
+                <div class="stat-card elapsed">
+                    <h3>Hari Kerja Berlalu</h3>
+                    <div class="value" id="statElapsed">0</div>
+                    <div class="label">hari</div>
+                </div>
+
+                <div class="stat-card clean">
+                    <h3>Hari Kerja Bersih</h3>
+                    <div class="value" id="statClean" style="font-size: 24px;">0</div>
+                    <div class="label">hari terpenuhi</div>
+                </div>
+
+                <div class="stat-card remaining" id="cardRemaining">
+                    <h3>Sisa Jam</h3>
+                    <div class="value" id="statRemaining">0</div>
+                    <div class="label">jam tersisa</div>
+                </div>
+
+                <div class="stat-card shortfall">
+                    <h3>Kekurangan</h3>
+                    <div class="value" id="statShortfall" style="font-size: 24px;">0</div>
+                    <div class="label">hari</div>
+                </div>
+
+                <div class="stat-card overtime" id="cardOvertime">
+                    <h3>Lembur Bersih</h3>
+                    <div class="value" id="statOvertime">0</div>
+                    <div class="label">jam</div>
+                </div>
+
+                <div class="stat-card absent">
+                    <h3>Tidak Hadir</h3>
+                    <div class="value" id="statAbsent">0</div>
+                    <div class="label">hari</div>
+                </div>
+            </div>
+
+            <div class="legend">
+                <h3>📖 Penjelasan Kartu</h3>
+
+                <div class="legend-item">
+                    <div class="legend-icon">📆</div>
+                    <div class="legend-text">
+                        <strong>Hari Kerja Berlalu:</strong> Total hari kerja yang sudah lewat (tidak termasuk Minggu).
+                        Contoh: Jika sudah 6 hari kerja berlalu, artinya Anda sudah melalui 6 hari kerja sejak tanggal
+                        2.
+                    </div>
+                </div>
+
+                <div class="legend-item">
+                    <div class="legend-icon">✅</div>
+                    <div class="legend-text">
+                        <strong>Hari Kerja Bersih:</strong> Jumlah hari kerja penuh (8.5 jam) yang berhasil terbentuk
+                        dari akumulasi jam kerja + lembur. Contoh: 39.5 jam = 4 hari bersih + 5.5 jam sisa.
+                    </div>
+                </div>
+
+                <div class="legend-item">
+                    <div class="legend-icon">⏰</div>
+                    <div class="legend-text">
+                        <strong>Sisa Jam:</strong> Hanya tampil jika BELUM TERPENUHI. Jam yang tersisa setelah
+                        pembentukan hari kerja penuh, tapi belum cukup membentuk 1 hari kerja lagi (butuh 8.5 jam). Jika
+                        sudah terpenuhi, kartu ini disembunyikan.
+                    </div>
+                </div>
+
+                <div class="legend-item">
+                    <div class="legend-icon">⚠️</div>
+                    <div class="legend-text">
+                        <strong>Kekurangan:</strong> Dihitung REAL dari kalender. Setiap hari yang tidak masuk penuh
+                        (kurang dari target) akan dihitung kekurangannya. Contoh: Hari Senin target 8 jam tapi cuma 4
+                        jam = kurang 4 jam.
+                    </div>
+                </div>
+
+                <div class="legend-item">
+                    <div class="legend-icon">🎁</div>
+                    <div class="legend-text">
+                        <strong>Lembur Bersih:</strong> Hanya tampil jika SUDAH TERPENUHI. Jam lembur yang benar-benar
+                        menjadi bonus setelah semua hari kerja terpenuhi. Jika masih ada kekurangan, kartu ini
+                        disembunyikan dan yang tampil adalah Sisa Jam.
+                    </div>
+                </div>
+
+                <div class="legend-item">
+                    <div class="legend-icon">❌</div>
+                    <div class="legend-text">
+                        <strong>Tidak Hadir:</strong> Dihitung REAL dari kalender. Jumlah hari kerja (sampai hari ini)
+                        di mana tidak ada jam kerja sama sekali atau ditandai "Tidak Hadir". Hari yang belum tiba tidak
+                        dihitung.
+                    </div>
+                </div>
+            </div>
+
+            <div class="calendar">
+                <h2 id="calendarTitle">📅 Kalender Absensi</h2>
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+        </div>
+
+        <div id="emptyState" class="empty-state">
+            <h2>👋</h2>
+            <p>Silakan pilih karyawan dan periode,<br>lalu klik tombol "Muat Data Absensi"</p>
+        </div>
+
+        <div id="loadingState" class="loading" style="display: none;">
+            <h3>⏳</h3>
+            <p>Memuat data, harap tunggu...</p>
+        </div>
+    </div>
+
+    <script>
+        let currentEmployee = '';
+        let currentYear = new Date().getFullYear();
+        let currentMonth = new Date().getMonth() + 1;
+        let attendanceData = {};
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.className = 'toast toast-' + type;
+
+            const icon = type === 'success' ? '✅' : '❌';
+            toast.innerHTML = `
+        <div class="toast-icon">${icon}</div>
+        <div>${message}</div>
+      `;
+
+            // Slide in
+            setTimeout(() => toast.classList.add('show'), 100);
+
+            // Slide out
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function showError(message) {
+            showToast(message, 'error');
+        }
+
+        function showSuccess(message) {
+            showToast(message, 'success');
+        }
+
+        window.onload = function () {
+            document.getElementById('monthSelect').value = currentMonth;
+            document.getElementById('yearSelect').value = currentYear;
+            loadEmployees();
+        };
+
+        function loadEmployees() {
+            google.script.run
+                .withSuccessHandler(function (employees) {
+                    const select = document.getElementById('employeeSelect');
+                    select.innerHTML = '<option value="">-- Pilih Karyawan --</option>';
+                    employees.forEach(emp => {
+                        const option = document.createElement('option');
+                        option.value = emp;
+                        option.textContent = emp;
+                        select.appendChild(option);
+                    });
+                })
+                .withFailureHandler(showError)
+                .getEmployees();
+        }
+
+        function loadEmployee() {
+            const employee = document.getElementById('employeeSelect').value;
+            const month = parseInt(document.getElementById('monthSelect').value);
+            const year = parseInt(document.getElementById('yearSelect').value);
+
+            if (!employee) {
+                showError('Harap pilih karyawan terlebih dahulu!');
+                return;
+            }
+
+            currentEmployee = employee;
+            currentMonth = month;
+            currentYear = year;
+
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('loadingState').style.display = 'block';
+            document.getElementById('statsContainer').style.display = 'none';
+
+            google.script.run
+                .withSuccessHandler(function (data) {
+                    // Pastikan data tidak null
+                    attendanceData = data || {};
+                    renderCalendar();
+                    calculateStats();
+                    document.getElementById('loadingState').style.display = 'none';
+                    document.getElementById('statsContainer').style.display = 'block';
+                })
+                .withFailureHandler(function (error) {
+                    showError('Gagal memuat data: ' + error.message);
+                    document.getElementById('loadingState').style.display = 'none';
+                })
+                .getAttendanceData(employee, year, month);
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            // Pastikan attendanceData tidak null
+            if (!attendanceData) {
+                attendanceData = {};
+            }
+
+            const startDate = new Date(currentYear, currentMonth - 1, 2);
+            const endDate = new Date(currentYear, currentMonth, 1);
+
+            document.getElementById('calendarTitle').textContent =
+                `📅 Kalender Absensi - ${currentEmployee}`;
+
+            let currentDate = new Date(startDate);
+            const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+
+            while (currentDate <= endDate) {
+                const dateStr = formatDateString(currentDate);
+                const dayOfWeek = currentDate.getDay();
+                const dayData = attendanceData[dateStr] || {};
+
+                const cell = document.createElement('div');
+                cell.className = 'day-cell';
+                if (dayOfWeek === 0) cell.classList.add('sunday');
+                if (dayOfWeek === 6) cell.classList.add('saturday');
+
+                const status = dayData.status !== null && dayData.status !== undefined ? dayData.status : '';
+                const overtime = dayData.overtime || 0;
+
+                let btnClass = 'none';
+                let btnText = '-';
+
+                if (status === 'HADIR') {
+                    btnClass = 'hadir';
+                    btnText = '✓';
+                } else if (status === 'TIDAK_HADIR') {
+                    btnClass = 'tidak-hadir';
+                    btnText = '✗';
+                }
+
+                cell.innerHTML = `
+          <div class="day-number">${currentDate.getDate()}</div>
+          <div class="day-name">${dayNames[dayOfWeek]}</div>
+          <button class="attendance-btn ${btnClass}" onclick="toggleAttendance(${currentDate.getDate()})">
+            ${btnText}
+          </button>
+          ${dayOfWeek !== 0 ? `
+            <div class="input-label">Jam Kerja</div>
+            ${status !== 'HADIR' && status !== 'TIDAK_HADIR' ?
+                            `<input type="number" step="0.5" min="0" max="12" class="input-small hours-input" 
+                value="${status || ''}" placeholder="0" onchange="setPartialHours(${currentDate.getDate()}, this.value)">` :
+                            '<div style="text-align: center; font-size: 11px; color: #4CAF50; padding: 8px;">Auto</div>'
+                        }
+          ` : '<div style="text-align: center; font-size: 11px; color: #F44336; padding: 8px;">Libur</div>'}
+          <div class="input-label">Lembur</div>
+          <input type="number" step="0.5" min="0" class="input-small overtime-input" placeholder="0"
+            value="${overtime || ''}" onchange="setOvertime(${currentDate.getDate()}, this.value)">
+        `;
+
+                grid.appendChild(cell);
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+        }
+
+        function toggleAttendance(day) {
+            const date = new Date(currentYear, currentMonth - 1, day);
+            const dateStr = formatDateString(date);
+            const current = attendanceData[dateStr]?.status;
+            const currentStatus = current !== null && current !== undefined ? current : '';
+
+            let next = '';
+            if (!currentStatus || (currentStatus !== 'HADIR' && currentStatus !== 'TIDAK_HADIR')) {
+                next = 'HADIR';
+            } else if (currentStatus === 'HADIR') {
+                next = 'TIDAK_HADIR';
+            } else {
+                next = '';
+            }
+
+            saveData(day, 'status', next);
+        }
+
+        function setPartialHours(day, value) {
+            saveData(day, 'status', value || '');
+        }
+
+        function setOvertime(day, value) {
+            saveData(day, 'overtime', parseFloat(value) || 0);
+        }
+
+        function saveData(day, type, value) {
+            google.script.run
+                .withSuccessHandler(function () {
+                    const date = new Date(currentYear, currentMonth - 1, day);
+                    const dateStr = formatDateString(date);
+                    if (!attendanceData[dateStr]) attendanceData[dateStr] = {};
+                    attendanceData[dateStr][type] = value;
+                    renderCalendar();
+                    calculateStats();
+                    showSuccess('Data berhasil disimpan!');
+                })
+                .withFailureHandler(function (error) {
+                    showError('Gagal menyimpan: ' + error.message);
+                })
+                .saveAttendance(currentEmployee, currentYear, currentMonth, day, type, value);
+        }
+
+        function calculateStats() {
+            google.script.run
+                .withSuccessHandler(function (stats) {
+                    document.getElementById('statElapsed').textContent = stats.workDaysElapsed;
+
+                    // Tampilkan Hari Kerja Bersih dengan format yang sudah diproses dari backend
+                    document.getElementById('statClean').innerHTML = stats.cleanWorkDays;
+
+                    document.getElementById('statShortfall').innerHTML = stats.shortfallDays;
+                    document.getElementById('statAbsent').textContent = stats.absentDays;
+                    document.getElementById('periodInfo').textContent = 'Periode: ' + stats.periodInfo;
+
+                    // Logika tampilan kartu berdasarkan status terpenuhi atau belum
+                    const cardRemaining = document.getElementById('cardRemaining');
+                    const cardOvertime = document.getElementById('cardOvertime');
+
+                    if (stats.isComplete) {
+                        // Jika sudah terpenuhi: tampilkan Lembur Bersih, sembunyikan Sisa Jam
+                        cardRemaining.style.display = 'none';
+                        cardOvertime.style.display = 'block';
+                        document.getElementById('statOvertime').textContent = stats.cleanOvertime;
+                    } else {
+                        // Jika belum terpenuhi: tampilkan Sisa Jam, sembunyikan Lembur Bersih
+                        cardRemaining.style.display = 'block';
+                        cardOvertime.style.display = 'none';
+                        document.getElementById('statRemaining').textContent = stats.remainingHours;
+                    }
+                })
+                .withFailureHandler(showError)
+                .calculateWorkHours(currentEmployee, currentYear, currentMonth);
+        }
+
+        function formatDateString(date) {
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+    </script>
+</body>
+
+</html>
