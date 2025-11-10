@@ -441,6 +441,79 @@
             font-style: italic;
         }
 
+        .tab-btn {
+            flex: 1;
+            padding: 14px 20px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #666;
+        }
+
+        .tab-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .summary-table {
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .summary-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .summary-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 10px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .summary-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+        }
+
+        .summary-table tr:hover {
+            background: #f9f9f9;
+        }
+
+        .summary-table .number {
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .summary-table .good {
+            color: #4CAF50;
+        }
+
+        .summary-table .warning {
+            color: #FF9800;
+        }
+
+        .summary-table .bad {
+            color: #F44336;
+        }
+
         .loading,
         .empty-state {
             text-align: center;
@@ -486,8 +559,18 @@
         <!-- Toast Notification -->
         <div id="toast" class="toast"></div>
 
+        <!-- Tab Navigation -->
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button id="tabInput" class="tab-btn active" onclick="switchTab('input')">
+                📝 Input Absensi
+            </button>
+            <button id="tabSummary" class="tab-btn" onclick="switchTab('summary')">
+                📊 Rangkuman Semua Karyawan
+            </button>
+        </div>
+
         <!-- Panduan Singkat -->
-        <div
+        <div id="guideBox"
             style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
             <h3 style="margin-bottom: 10px; font-size: 16px; color: #856404;">📋 Cara Menggunakan (3 Langkah Mudah)</h3>
             <ol style="margin: 0; padding-left: 20px; color: #856404; font-size: 14px; line-height: 1.8;">
@@ -538,6 +621,41 @@
             <button class="btn-primary" onclick="loadEmployee()">
                 🚀 Muat Data Absensi
             </button>
+        </div>
+
+        <!-- Summary Page -->
+        <div id="summaryContainer" style="display: none;">
+            <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                <div class="form-group" style="flex: 1;">
+                    <label for="summaryMonth">📅 Bulan</label>
+                    <select id="summaryMonth">
+                        <option value="1">Januari</option>
+                        <option value="2">Februari</option>
+                        <option value="3">Maret</option>
+                        <option value="4">April</option>
+                        <option value="5">Mei</option>
+                        <option value="6">Juni</option>
+                        <option value="7">Juli</option>
+                        <option value="8">Agustus</option>
+                        <option value="9">September</option>
+                        <option value="10">Oktober</option>
+                        <option value="11">November</option>
+                        <option value="12">Desember</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label for="summaryYear">📆 Tahun</label>
+                    <select id="summaryYear">
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn-primary" onclick="loadSummary()">
+                📊 Muat Rangkuman
+            </button>
+            <div id="summaryTable" style="margin-top: 20px;"></div>
         </div>
 
         <div id="statsContainer" style="display: none;">
@@ -686,8 +804,108 @@
         window.onload = function () {
             document.getElementById('monthSelect').value = currentMonth;
             document.getElementById('yearSelect').value = currentYear;
+            document.getElementById('summaryMonth').value = currentMonth;
+            document.getElementById('summaryYear').value = currentYear;
             loadEmployees();
         };
+        
+        function switchTab(tab) {
+            const tabInput = document.getElementById('tabInput');
+            const tabSummary = document.getElementById('tabSummary');
+            const guideBox = document.getElementById('guideBox');
+            const controls = document.querySelector('.controls');
+            const statsContainer = document.getElementById('statsContainer');
+            const summaryContainer = document.getElementById('summaryContainer');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (tab === 'input') {
+                tabInput.classList.add('active');
+                tabSummary.classList.remove('active');
+                guideBox.style.display = 'block';
+                controls.style.display = 'block';
+                summaryContainer.style.display = 'none';
+                if (currentEmployee) {
+                    statsContainer.style.display = 'block';
+                    emptyState.style.display = 'none';
+                } else {
+                    statsContainer.style.display = 'none';
+                    emptyState.style.display = 'block';
+                }
+            } else {
+                tabInput.classList.remove('active');
+                tabSummary.classList.add('active');
+                guideBox.style.display = 'none';
+                controls.style.display = 'none';
+                statsContainer.style.display = 'none';
+                emptyState.style.display = 'none';
+                summaryContainer.style.display = 'block';
+            }
+        }
+        
+        function loadSummary() {
+            const month = parseInt(document.getElementById('summaryMonth').value);
+            const year = parseInt(document.getElementById('summaryYear').value);
+            
+            document.getElementById('summaryTable').innerHTML = '<div class="loading"><h3>⏳</h3><p>Memuat rangkuman...</p></div>';
+            
+            google.script.run
+                .withSuccessHandler(function(summary) {
+                    renderSummaryTable(summary, month, year);
+                })
+                .withFailureHandler(function(error) {
+                    showError('Gagal memuat rangkuman: ' + error.message);
+                })
+                .getAllEmployeesSummary(year, month);
+        }
+        
+        function renderSummaryTable(summary, month, year) {
+            const monthNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            
+            let html = `
+                <div class="summary-table">
+                    <h2 style="text-align: center; margin-bottom: 15px; color: #333;">
+                        📊 Rangkuman ${monthNames[month]} ${year}
+                    </h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nama Karyawan</th>
+                                <th class="number">Hari Berlalu</th>
+                                <th class="number">Hari Bersih</th>
+                                <th class="number">Sisa Jam</th>
+                                <th class="number">Kekurangan</th>
+                                <th class="number">Lembur Bersih</th>
+                                <th class="number">Tidak Hadir</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            summary.forEach(emp => {
+                const shortfallClass = parseFloat(emp.shortfallHours) > 0 ? 'bad' : 'good';
+                const absentClass = emp.absentDays > 0 ? 'warning' : 'good';
+                
+                html += `
+                    <tr>
+                        <td><strong>${emp.name}</strong></td>
+                        <td class="number">${emp.workDaysElapsed}</td>
+                        <td class="number good">${emp.cleanWorkDays}</td>
+                        <td class="number ${emp.isComplete ? 'good' : 'warning'}">${emp.isComplete ? '-' : emp.remainingHours}</td>
+                        <td class="number ${shortfallClass}">${emp.shortfallDays}</td>
+                        <td class="number ${emp.isComplete ? 'good' : ''}">${emp.isComplete ? emp.cleanOvertime : '-'}</td>
+                        <td class="number ${absentClass}">${emp.absentDays}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            document.getElementById('summaryTable').innerHTML = html;
+        }
 
         function loadEmployees() {
             google.script.run
@@ -784,10 +1002,10 @@
                 cell.innerHTML = `
           <div class="day-number">${currentDate.getDate()}</div>
           <div class="day-name">${dayNames[dayOfWeek]}</div>
-          <button class="attendance-btn ${btnClass}" onclick="toggleAttendance(${currentDate.getDate()})">
-            ${btnText}
-          </button>
           ${dayOfWeek !== 0 ? `
+            <button class="attendance-btn ${btnClass}" onclick="toggleAttendance(${currentDate.getDate()})">
+              ${btnText}
+            </button>
             <div class="input-label">Jam Kerja</div>
             ${status !== 'HADIR' && status !== 'TIDAK_HADIR' ?
                             `<input type="number" step="0.5" min="0" max="12" class="input-small hours-input" 
@@ -795,7 +1013,7 @@
                 <div class="hint-text">Kosongkan jika hadir penuh</div>` :
                             '<div style="text-align: center; font-size: 11px; color: #4CAF50; padding: 8px;">Hadir Penuh</div>'
                         }
-          ` : '<div style="text-align: center; font-size: 11px; color: #F44336; padding: 8px;">Libur</div>'}
+          ` : '<div style="text-align: center; font-size: 13px; color: #F44336; padding: 12px; font-weight: 600;">LIBUR</div>'}
           <div class="input-label">Lembur (Jam)</div>
           <div class="preset-buttons">
             <button class="preset-btn" onclick="setOvertimePreset(${currentDate.getDate()}, 0.5)">0.5</button>

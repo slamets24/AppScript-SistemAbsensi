@@ -338,3 +338,27 @@ function testConnection() {
     return 'ERROR';
   }
 }
+
+//
+ ==================== RANGKUMAN SEMUA KARYAWAN ====================
+function getAllEmployeesSummary(year, month) {
+  const employees = getEmployees();
+  const summary = [];
+  
+  employees.forEach(employeeName => {
+    const stats = calculateWorkHours(employeeName, year, month);
+    summary.push({
+      name: employeeName,
+      workDaysElapsed: stats.workDaysElapsed,
+      cleanWorkDays: stats.cleanWorkDays,
+      remainingHours: stats.remainingHours,
+      shortfallDays: stats.shortfallDays,
+      shortfallHours: stats.shortfallHours,
+      cleanOvertime: stats.cleanOvertime,
+      absentDays: stats.absentDays,
+      isComplete: stats.isComplete
+    });
+  });
+  
+  return summary;
+}
