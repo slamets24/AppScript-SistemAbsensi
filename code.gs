@@ -80,11 +80,22 @@ function saveAttendance(employeeName, year, month, day, type, value) {
   
   if (rowIndex === -1) {
     rowIndex = lastRow + 1;
-    sheet.getRange(rowIndex, 1, 1, 2).setValues([[employeeName, dateStr]]);
+    sheet.getRange(rowIndex, 1).setValue(employeeName);
+    sheet.getRange(rowIndex, 2).setValue(dateStr);
   }
   
   if (type === 'status') {
-    sheet.getRange(rowIndex, 3).setValue(value || '');
+    const statusValue = value || '';
+    const cell = sheet.getRange(rowIndex, 3);
+    
+    // Jika HADIR atau TIDAK_HADIR, simpan sebagai text
+    if (statusValue === 'HADIR' || statusValue === 'TIDAK_HADIR' || statusValue === '') {
+      cell.setNumberFormat('@').setValue(statusValue);
+    } else {
+      // Jika angka (jam kerja parsial), simpan sebagai number dengan prefix '
+      // Prefix ' membuat Google Sheets treat sebagai text tapi tetap tampil seperti angka
+      cell.setValue("'" + statusValue);
+    }
   } else if (type === 'overtime') {
     // Fix: Ganti koma dengan titik untuk format angka yang benar
     const cleanValue = String(value).replace(',', '.');
@@ -131,12 +142,30 @@ function getAttendanceData(employeeName, year, month) {
       if (statusValue === null || statusValue === undefined || statusValue === '') {
         statusValue = '';
       } else {
-        statusValue = String(statusValue);
+        // Konversi ke string dan bersihkan dari format yang aneh
+        statusValue = String(statusValue).trim();
+        
+        // Hapus prefix ' jika ada (dari text format)
+        if (statusValue.startsWith("'")) {
+          statusValue = statusValue.substring(1);
+        }
+        
+        // Jika Google Sheets mengubah jadi Date object, kembalikan ke string kosong
+        if (statusValue.match(/^\d{4}-\d{2}-\d{2}/) || statusValue.includes('GMT')) {
+          statusValue = '';
+        }
+      }
+      
+      // Parse overtime dengan aman
+      let overtimeValue = 0;
+      if (row[3] !== null && row[3] !== undefined && row[3] !== '') {
+        const cleanOT = String(row[3]).replace(',', '.');
+        overtimeValue = parseFloat(cleanOT) || 0;
       }
       
       result[dateStr] = {
         status: statusValue,
-        overtime: parseFloat(row[3]) || 0
+        overtime: overtimeValue
       };
     }
   });

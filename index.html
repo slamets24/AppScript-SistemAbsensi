@@ -808,7 +808,7 @@
             document.getElementById('summaryYear').value = currentYear;
             loadEmployees();
         };
-        
+
         function switchTab(tab) {
             const tabInput = document.getElementById('tabInput');
             const tabSummary = document.getElementById('tabSummary');
@@ -817,7 +817,7 @@
             const statsContainer = document.getElementById('statsContainer');
             const summaryContainer = document.getElementById('summaryContainer');
             const emptyState = document.getElementById('emptyState');
-            
+
             if (tab === 'input') {
                 tabInput.classList.add('active');
                 tabSummary.classList.remove('active');
@@ -841,26 +841,26 @@
                 summaryContainer.style.display = 'block';
             }
         }
-        
+
         function loadSummary() {
             const month = parseInt(document.getElementById('summaryMonth').value);
             const year = parseInt(document.getElementById('summaryYear').value);
-            
+
             document.getElementById('summaryTable').innerHTML = '<div class="loading"><h3>⏳</h3><p>Memuat rangkuman...</p></div>';
-            
+
             google.script.run
-                .withSuccessHandler(function(summary) {
+                .withSuccessHandler(function (summary) {
                     renderSummaryTable(summary, month, year);
                 })
-                .withFailureHandler(function(error) {
+                .withFailureHandler(function (error) {
                     showError('Gagal memuat rangkuman: ' + error.message);
                 })
                 .getAllEmployeesSummary(year, month);
         }
-        
+
         function renderSummaryTable(summary, month, year) {
             const monthNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-            
+
             let html = `
                 <div class="summary-table">
                     <h2 style="text-align: center; margin-bottom: 15px; color: #333;">
@@ -880,11 +880,11 @@
                         </thead>
                         <tbody>
             `;
-            
+
             summary.forEach(emp => {
                 const shortfallClass = parseFloat(emp.shortfallHours) > 0 ? 'bad' : 'good';
                 const absentClass = emp.absentDays > 0 ? 'warning' : 'good';
-                
+
                 html += `
                     <tr>
                         <td><strong>${emp.name}</strong></td>
@@ -897,13 +897,13 @@
                     </tr>
                 `;
             });
-            
+
             html += `
                         </tbody>
                     </table>
                 </div>
             `;
-            
+
             document.getElementById('summaryTable').innerHTML = html;
         }
 
@@ -1050,15 +1050,42 @@
         }
 
         function setPartialHours(day, value) {
+            if (!value || value === '') {
+                saveData(day, 'status', '');
+                return;
+            }
+
             // Ganti koma dengan titik untuk format angka
-            const cleanValue = value ? String(value).replace(',', '.') : '';
+            let cleanValue = String(value).replace(',', '.');
+
+            // Validasi: harus angka valid
+            const numValue = parseFloat(cleanValue);
+            if (isNaN(numValue) || numValue < 0 || numValue > 12) {
+                showError('Jam kerja harus angka antara 0-12');
+                return;
+            }
+
+            // Simpan sebagai string angka (bukan Date)
             saveData(day, 'status', cleanValue);
         }
 
         function setOvertime(day, value) {
+            if (!value || value === '') {
+                saveData(day, 'overtime', 0);
+                return;
+            }
+
             // Ganti koma dengan titik untuk format angka
-            const cleanValue = String(value).replace(',', '.');
-            saveData(day, 'overtime', parseFloat(cleanValue) || 0);
+            let cleanValue = String(value).replace(',', '.');
+
+            // Validasi: harus angka valid
+            const numValue = parseFloat(cleanValue);
+            if (isNaN(numValue) || numValue < 0) {
+                showError('Jam lembur harus angka positif');
+                return;
+            }
+
+            saveData(day, 'overtime', numValue);
         }
 
         function setOvertimePreset(day, value) {
